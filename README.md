@@ -1,2 +1,3 @@
-# panorama
-School project - creating panoramas from multiple images
+# Panorama
+
+School project - creating a panorama from multiple images.
