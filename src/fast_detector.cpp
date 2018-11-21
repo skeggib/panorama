@@ -17,7 +17,7 @@ cv::Mat fast_detector(const cv::Mat & image, int threshold) {
                 j >= 3 && j < image.size().width - 3) {
                 auto array = circle(pImage, image.size().width);
                 auto value = is_corner(array, *pImage, threshold);
-                if (value >= 10)
+                if (value >= 12)
                     *pCorners = value;
                 else
                     *pCorners = 0;

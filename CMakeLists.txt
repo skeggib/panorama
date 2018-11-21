@@ -7,12 +7,10 @@ find_package(OpenCV REQUIRED)
 include_directories ("headers")
 include_directories (${OPENCV_INCLUDE_DIR})
 
-add_executable(fast_detector_test
+add_executable(panorama
     src/main.cpp
     src/fast_detector.cpp
-    src/distance.cpp
     src/local_maxima.cpp
-    src/skeletonization.cpp
     src/arguments.cpp
 )
-target_link_libraries (fast_detector_test ${OpenCV_LIBS})
+target_link_libraries (panorama ${OpenCV_LIBS})
