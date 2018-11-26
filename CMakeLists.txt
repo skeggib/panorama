@@ -8,9 +8,10 @@ include_directories ("headers")
 include_directories (${OPENCV_INCLUDE_DIR})
 
 add_executable(panorama
-    src/main.cpp
-    src/fast_detector.cpp
-    src/local_maxima.cpp
+    panorama.cpp
     src/arguments.cpp
+    src/fast_detector.cpp
+    src/transformation.cpp
+    src/local_maxima.cpp
 )
 target_link_libraries (panorama ${OpenCV_LIBS})

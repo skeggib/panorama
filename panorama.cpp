@@ -2,12 +2,13 @@
 #include <opencv2/opencv.hpp>
 #include <ctime>
 #include "arguments.hpp"
-#include "panorama.hpp"
+#include "corner_detection.hpp"
+#include "transformation.hpp"
 
 int main(int argc, char** argv) {
     arguments_t args(argc, argv);
-    if (args.parametersSize() < 2) {
-        std::cout << "Usage: " << argv[0] << " <image1> <image2>" << std::endl;
+    if (args.parametersSize() < 3) {
+        std::cout << "Usage: " << argv[0] << " <image1> <image2> <output>" << std::endl;
         return 0;
     }
 
@@ -30,22 +31,27 @@ int main(int argc, char** argv) {
     auto start = std::clock();
 
     // Find corners in images
-    auto corners1 = corners_detector<9>(image1);
-    auto corners2 = corners_detector<9>(image2);
+    std::cout << "Corners detection... \t";
+    auto corners1 = find_corners<9>(image1);
+    auto corners2 = find_corners<9>(image2);
     auto detectionTime = std::clock();
-    std::cout << "Corners detection: " << (detectionTime - start) / (double)(CLOCKS_PER_SEC / 1000) << " ms" << std::endl;
+    std::cout << (detectionTime - start) / (double)(CLOCKS_PER_SEC / 1000) << " ms" << std::endl;
 
     // Find pair of corners
+    std::cout << "Corners pairing... \t";
     auto pairs = pair_corners<9>(corners1, corners2);
     auto pairingTime = std::clock();
-    std::cout << "Corners pairing: " << (pairingTime - detectionTime) / (double)(CLOCKS_PER_SEC / 1000) << " ms" << std::endl;
+    std::cout << (pairingTime - detectionTime) / (double)(CLOCKS_PER_SEC / 1000) << " ms" << std::endl;
 
     // Find transformation
+    std::cout << "Finding transform... \t";
     std::vector<std::pair<cv::Point, cv::Point>> selectedPairs;
     auto transformMat = find_transform(pairs, selectedPairs);
     auto findTransformTime = std::clock();
-    std::cout << "Finding transform: " << (findTransformTime - pairingTime) / (double)(CLOCKS_PER_SEC / 1000) << " ms" << std::endl;
+    std::cout << (findTransformTime - pairingTime) / (double)(CLOCKS_PER_SEC / 1000) << " ms" << std::endl;
 
+    // Transforming image
+    std::cout << "Transforming image... \t";
     auto p00 = transform(cv::Point(0, 0), transformMat);
     auto p10 = transform(cv::Point(image1.size().width - 1, 0), transformMat);
     auto p01 = transform(cv::Point(0, image1.size().height - 1), transformMat);
@@ -67,38 +73,14 @@ int main(int argc, char** argv) {
             auto pp = transform(p, inverseTransformMat);
             if (pp.x >= 0 && pp.x < image1.size().width - 1 &&
                 pp.y >= 0 && pp.y < image1.size().height - 1)
-                *pPanorama = (uchar)(((int)image1.at<uchar>(pp) + (int)*pPanorama) / 2);
+                *pPanorama = image1.at<uchar>(pp);
         }
     }
     
-    // Draw rectangles around corners in image 1
-    for (const auto& corner : corners1) {
-        cv::rectangle(image1, cv::Rect(corner.position.x - 4, corner.position.y - 4, 9, 9), UCHAR_MAX);
-    }
-    
-    // Draw rectangles around corners in image 2
-    for (const auto& corner : corners2) {
-        cv::rectangle(image2, cv::Rect(corner.position.x - 4, corner.position.y - 4, 9, 9), UCHAR_MAX);
-    }
+    auto transformTime = std::clock();
+    std::cout << (transformTime - findTransformTime) / (double)(CLOCKS_PER_SEC / 1000) << " ms" << std::endl;
 
-    // Create image containing both image 1 and 2
-    cv::Mat images(
-        std::max(image1.size().height, image2.size().height),
-        image1.size().width + image2.size().width,
-        CV_8UC1);
-    auto roiImage1 = images(cv::Rect(0, 0, image1.size().width, image1.size().height));
-    auto roiImage2 = images(cv::Rect(image1.size().width, 0, image2.size().width, image2.size().height));
-    image1.copyTo(roiImage1);
-    image2.copyTo(roiImage2);
-
-    // Draws lines for pairs of corners
-    for (auto pair : selectedPairs) {
-        auto p1 = pair.first;
-        auto p2 = pair.second;
-        p2.x += image1.size().width;
-        cv::line(images, p1, p2, UCHAR_MAX);
-    }
-
+    cv::imwrite(args[2], panoramaImage);
     cv::imshow("corners", panoramaImage);
     cv::waitKey();
 
