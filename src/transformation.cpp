@@ -58,10 +58,7 @@ cv::Mat find_transform(
             A.at<float>(i*2+1, 7) = (float)-pair.second.y * pair.first.y;
             A.at<float>(i*2+1, 8) = (float)-pair.second.y;
         }
-        cv::Mat b(9, 1, CV_32F);
-        for (int i = 0; i < b.size().height - 1; i++)
-            b.at<float>(i, 0) = 0.;
-        b.at<float>(b.size().height - 1, 0) = 1.;
+        cv::Mat b(9, 1, CV_32F, 0.);
         cv::Mat x;
         cv::solve(A, b, x, cv::DECOMP_SVD);
         
