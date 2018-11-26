@@ -13,13 +13,13 @@ struct corner {
 };
 
 template<int CornerSize>
-std::vector<corner<CornerSize>> find_corners(const cv::Mat & image) {
+std::vector<corner<CornerSize>> find_corners(const cv::Mat & image, int threshold) {
     cv::Mat result;
     cv::equalizeHist(image, result);
-    result = fast_detector(image, 50);
+    result = fast_detector(image, threshold);
     cv::normalize(result, result, 0, 255, cv::NORM_MINMAX);
     result = local_maxima(result, 4);
-    cv::threshold(result, result, 255. * 0.8, 255, cv::THRESH_BINARY);
+    cv::threshold(result, result, 1, 255, cv::THRESH_BINARY);
     
     std::vector<corner<CornerSize>> vec;
     auto height = result.size().height;

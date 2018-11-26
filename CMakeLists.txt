@@ -15,3 +15,11 @@ add_executable(panorama
     src/local_maxima.cpp
 )
 target_link_libraries (panorama ${OpenCV_LIBS})
+
+add_executable(fast
+    fast.cpp
+    src/arguments.cpp
+    src/fast_detector.cpp
+    src/local_maxima.cpp
+)
+target_link_libraries (fast ${OpenCV_LIBS})
