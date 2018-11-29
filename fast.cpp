@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
 
     std::vector<cv::KeyPoint> cv_corners;
     start = std::clock();
-    cv::FAST(image, cv_corners, threshold);
+    cv::FAST(image, cv_corners, threshold, true, cv::FastFeatureDetector::TYPE_7_12);
     std::cout << "OpenCV FAST: " << (std::clock() - start) / (double)(CLOCKS_PER_SEC / 1000) << " ms" << std::endl;
     cv::Mat cv_fast = image.clone();
     for (auto corner : cv_corners) {
