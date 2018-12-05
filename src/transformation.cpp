@@ -22,7 +22,7 @@ cv::Mat find_transform(
     int bestScore = 0;
     cv::Mat bestTransform(3, 3, CV_32F);
     for (int iter = 0; iter < 1000; iter++) {
-        std::array<int, 5> indexes;
+        std::array<int, 4> indexes;
         for (int i = 0; i < indexes.size(); i++) {
             indexes[i] = std::rand() % pairs.size();
             bool exists = false;
@@ -37,7 +37,7 @@ cv::Mat find_transform(
         for (int i = 0; i < indexes.size(); i++)
             selectedPairs.push_back(pairs[indexes[i]]);
 
-        cv::Mat A(10, 9, CV_32F);
+        cv::Mat A(9, 9, CV_32F);
         for (int i = 0; i < selectedPairs.size(); i++) {
             const auto& pair = selectedPairs[i];
             A.at<float>(i*2, 0) = (float)pair.first.x;
@@ -58,7 +58,13 @@ cv::Mat find_transform(
             A.at<float>(i*2+1, 7) = (float)-pair.second.y * pair.first.y;
             A.at<float>(i*2+1, 8) = (float)-pair.second.y;
         }
+        for (int i = 0; i < A.size().width; i++)
+            A.at<float>(8, i) = 0;
+        A.at<float>(8, 8) = 1;
+
         cv::Mat b(9, 1, CV_32F, 0.);
+        b.at<float>(8, 0) = 1;
+
         cv::Mat x;
         cv::solve(A, b, x, cv::DECOMP_SVD);
         
