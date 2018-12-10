@@ -1,9 +1,9 @@
-#include "fast_detector.hpp"
+#include "corner_detection.hpp"
 
 #include <vector>
 
-std::array<uchar, 16> circle(uchar* pixel, int width);
 uchar is_corner(const std::array<uchar, 16> & circle, uchar pixel, int threshold);
+std::array<uchar, 16> circle(uchar* pixel, int width);
 
 cv::Mat fast_detector(const cv::Mat & image, int threshold) {
 
@@ -102,4 +102,32 @@ std::array<uchar, 16> circle(uchar* pixel, int width) {
     array[15] = *pixel;
     
     return array;
+}
+
+cv::Mat local_maxima(const cv::Mat& image, int n) {
+    cv::Mat result(image.size(), image.type());
+    auto height = image.size().height;
+    auto width = image.size().width;
+    auto* pImage = image.data;
+    auto* pResult = result.data;
+    
+    for(int i = 0; i < height; i++) {
+        for(int j = 0; j < width; j++, pImage++, pResult++) {
+            bool isLocalMax = true;
+            for (int di = std::max(-n, -i); di <= std::min(n, height - 1 - i) && isLocalMax; di++) {
+                for (int dj = std::max(-n, -j); dj <= std::min(n, width - 1 - j) && isLocalMax; dj++) {
+                    if (di == 0 && dj == 0)
+                        continue;
+                    if (*pImage < *(pImage + di * width + dj))
+                        isLocalMax = false;
+                }
+            }
+            if (isLocalMax)
+                *pResult = *pImage;
+            else
+                *pResult = 0;
+        }
+    }
+    
+    return result;
 }

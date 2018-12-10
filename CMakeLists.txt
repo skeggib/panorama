@@ -10,16 +10,21 @@ include_directories (${OPENCV_INCLUDE_DIR})
 add_executable(panorama
     panorama.cpp
     src/arguments.cpp
-    src/fast_detector.cpp
+    src/corner_detection.cpp
     src/transformation.cpp
-    src/local_maxima.cpp
 )
 target_link_libraries (panorama ${OpenCV_LIBS})
 
 add_executable(fast
     fast.cpp
     src/arguments.cpp
-    src/fast_detector.cpp
-    src/local_maxima.cpp
+    src/corner_detection.cpp
 )
 target_link_libraries (fast ${OpenCV_LIBS})
+
+add_executable(matching
+    matching.cpp
+    src/arguments.cpp
+    src/corner_detection.cpp
+)
+target_link_libraries (matching ${OpenCV_LIBS})

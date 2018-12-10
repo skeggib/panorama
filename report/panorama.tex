@@ -6,6 +6,7 @@
 \usepackage{caption}
 \usepackage[left=2cm, right=2cm, top=2cm, bottom=2cm]{geometry}
 \usepackage{amsmath}
+\usepackage{listings}
 
 \title{Panorama reconstruction using homographies}
 
@@ -36,18 +37,55 @@ The first step of constructing a panorama is to find corners (i.e. interest poin
 where $S$ is a set of $n$ contiguous pixels in the circle.
 \\
 
-I tested my implementation by comparing the result to the FAST detector implemented in OpenCV. Figures \ref{my_fast} and \ref{opencv_fast} are the comparison of the result of my FAST implementation and the OpenCV one using the parameters $n = 12$ and $t = 50$. We can see in those two images that the same corners are detected but my implementation detects less of them: this is probably due to a different method of non-maxima suppression. Another interesting comparison can be the execution time: for this image, OpenCV found corners in less than 5 ms and my implementation took about 500 ms. The execution time my algorithm is slower because I implemented the naive version, which could be improved by examining 4 example pixels and rejecting non-corners before searching the contiguous pixels.
+I tested my implementation by comparing my results to the FAST detector implemented in OpenCV using the parameters $n = 12$ and $t = 50$ (see figures \ref{my_fast} and \ref{opencv_fast}). We can see in those two images that the same corners are detected but my implementation detects less of them: this is probably due to a different method of non-maxima suppression. Another interesting comparison can be the execution time: for this image, OpenCV found corners in less than 5 ms and my implementation took about 500 ms. The execution time of my algorithm is longer because I implemented the naive version, which could be improved by examining 4 example pixels and rejecting non-corners before searching the contiguous pixels.
 
 \begin{figure}[h]
-	\centering\includegraphics[width=0.5\textwidth]{images/fast/my_fast.png}
+	\centering\includegraphics[width=0.5\textwidth]{images/my_fast.png}
 	\caption{Result of my implementation of the FAST detector.}
 	\label{my_fast}
 \end{figure}
 
 \begin{figure}[h]
-	\centering\includegraphics[width=0.5\textwidth]{images/fast/opencv_fast.png}
+	\centering\includegraphics[width=0.5\textwidth]{images/opencv_fast.png}
 	\caption{Result of the OpenCV FAST detector.}
 	\label{opencv_fast}
 \end{figure}
+
+\section{Pairing}
+
+The second step of contructing a panorama is to find common structures in two overlapping images. To do that, we find corners in both images and search for pairs of corners that are similar (that comes from the same region in the two images). In this project I use my implementation of the FAST detector decribed in the previous section to find the corners.
+\\
+
+For each image, I create a list of $9 \times 9$ squares centered on the corners, the pixels in these squares are my features. To pair them, for each corner in the first image, I compute the sum of squared distances (SSD) with corners of the second image and then keep the pair that have the lower distance. For two corners $c_1$ and $c_2$, the SSD is defined as follows:
+
+$$
+SSD(c_1, c_2) = \sum_{x = 1}^{9} \sum_{y = 1}^{9} \left[c_1(x, y) - c_2(x, y)\right]^2
+$$
+
+where $c(x,y)$ is the intensity of the pixel $(x,y)$ in the square around the corner $c$.
+\\
+
+To make this method more robust to global variations of intensity (e.g. photographs with different expositions), I replaced the SSD by a zero-mean sum of squared distances where the mean of a corner is substracted from it before computing the distance :
+
+$$
+SSD(c_1, c_2) = \sum_{x = 1}^{9} \sum_{y = 1}^{9} \left[(c_1(x, y) - \bar{c_1}) - (c_2(x, y) - \bar{c_2})\right]^2
+$$
+
+where $\bar{c} = \frac{1}{9\times9} \sum_{x = 1}^{9} \sum_{y = 1}^{9} c(x,y)$.
+\\
+
+Another improvement that I made to this algorithm is that for a corner $c_1$ in the first image, I keep the best matching corner $c_{2-best}$ only if the distance between $c_1$ and $c_{2-best}$ is much smaller that the distance between $c_1$ and the second best matching corner $c_{2-second}$:
+
+$$
+SSD(c_1, c_{2-best}) \le \frac{SSD(c_1, c_{2-second})}{2}
+$$
+
+I finally optimized the result of this algorithm by using the married pairing strategy: I run the algorithm twice, first pairing corners from image 1 to image 2, then from image 2 to image 1. I finnaly keep only pairs of corners that were paired reciprocally. The final result is shown is figure \ref{pairing}, for this example I ran the FAST detector with a high threshold to detect less corners, making the figure \ref{pairing} more readable.
+
+\begin{figure*}
+	\centering\includegraphics[width=\textwidth]{images/pairs.png}
+	\caption{Result of the pairing algorithm.}
+	\label{pairing}
+\end{figure*}
 
 \end{document}
