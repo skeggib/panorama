@@ -51,7 +51,7 @@ I tested my implementation by comparing my results to the FAST detector implemen
 	\label{opencv_fast}
 \end{figure}
 
-\section{Pairing}
+\section{Pairing corners}
 
 The second step of contructing a panorama is to find common structures in two overlapping images. To do that, we find corners in both images and search for pairs of corners that are similar (that comes from the same region in the two images). In this project I use my implementation of the FAST detector decribed in the previous section to find the corners.
 \\
@@ -65,7 +65,7 @@ $$
 where $c(x,y)$ is the intensity of the pixel $(x,y)$ in the square around the corner $c$.
 \\
 
-To make this method more robust to global variations of intensity (e.g. photographs with different expositions), I replaced the SSD by a zero-mean sum of squared distances where the mean of a corner is substracted from it before computing the distance :
+To make this method more robust to global variations of intensity (e.g. photographs with different expositions), I replaced the SSD by a zero-mean sum of squared distances (ZMSSD) where the mean of a corner is substracted from it before computing the distance :
 
 $$
 SSD(c_1, c_2) = \sum_{x = 1}^{9} \sum_{y = 1}^{9} \left[(c_1(x, y) - \bar{c_1}) - (c_2(x, y) - \bar{c_2})\right]^2
@@ -80,12 +80,29 @@ $$
 SSD(c_1, c_{2-best}) \le \frac{SSD(c_1, c_{2-second})}{2}
 $$
 
-I finally optimized the result of this algorithm by using the married pairing strategy: I run the algorithm twice, first pairing corners from image 1 to image 2, then from image 2 to image 1. I finnaly keep only pairs of corners that were paired reciprocally. The final result is shown is figure \ref{pairing}, for this example I ran the FAST detector with a high threshold to detect less corners, making the figure \ref{pairing} more readable.
+I finally optimized the result of this algorithm by using the married pairing strategy: I run the algorithm twice, first pairing corners from image 1 to image 2, then from image 2 to image 1. I finnaly keep only pairs of corners that were paired reciprocally.
+\\
 
-\begin{figure*}
-	\centering\includegraphics[width=\textwidth]{images/pairs.png}
-	\caption{Result of the pairing algorithm.}
-	\label{pairing}
+Figures \ref{pairs_zmssd}, \ref{pairs_zmssd_highscore}, \ref{pairs_zmssd_highscore_reciprocity} are the results of the corner pairing algorithm using the optimizations described above. For this example I ran the FAST detector with a high threshold to detect less corners, making the figures more readable.
+
+\begin{figure*}[h!]
+\vspace{1cm}
+\centering\includegraphics[width=\textwidth]{images/pairs_zmssd.png}
+\caption{Result of the pairing algorithm with no optimization and using the ZMSSD distance.}
+\label{pairs_zmssd}
+\end{figure*}
+
+\begin{figure*}[h!]
+\centering\includegraphics[width=\textwidth]{images/pairs_zmssd_highscore.png}
+\caption{Result of the pairing algorithm using the ZMSSD distance and keeping only high scores.}
+\label{pairs_zmssd_highscore}
+\end{figure*}
+
+\begin{figure*}[h!]
+\centering\includegraphics[width=\textwidth]{images/pairs_zmssd_highscore_reciprocity.png}
+\caption{Result of the pairing algorithm using the ZMSSD distance, keeping only high scores and applying the married pairing strategy.}
+\label{pairs_zmssd_highscore_reciprocity}
+\vspace{1cm}
 \end{figure*}
 
 \end{document}
