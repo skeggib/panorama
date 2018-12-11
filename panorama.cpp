@@ -32,8 +32,8 @@ int main(int argc, char** argv) {
 
     // Find corners in images
     std::cout << "Corners detection... \t";
-    auto corners1 = find_corners<9>(image1, 100);
-    auto corners2 = find_corners<9>(image2, 100);
+    auto corners1 = find_corners<9>(image1, 50);
+    auto corners2 = find_corners<9>(image2, 50);
     auto detectionTime = std::clock();
     std::cout << (detectionTime - start) / (double)(CLOCKS_PER_SEC / 1000) << " ms" << std::endl;
 

@@ -62,17 +62,14 @@ cv::Mat find_transform(
             A.at<float>(8, i) = 0;
         A.at<float>(8, 8) = 1;
 
-        cv::Mat b(9, 1, CV_32F, 0.);
-        b.at<float>(8, 0) = 1;
-
-        cv::Mat x;
-        cv::solve(A, b, x, cv::DECOMP_SVD);
+        cv::SVD svd;
+        cv::Mat w, u, vt;
+        svd.compute(A, w, u, vt);
         
         cv::Mat transformMat(3, 3, CV_32F);
-        auto* pTransformMat = transformMat.data;
-        auto* pX = x.data;
-        for (int i = 0; i < x.size().height * sizeof(float); i++, pTransformMat++, pX++)
-            *pTransformMat = *pX;
+        auto* pTransformMat = (float*)transformMat.data;
+        for (int i = 0; i < vt.size().height; i++, pTransformMat++)
+            *pTransformMat = vt.at<float>(8, i);
 
         int score = 0;
         for (auto pair : pairs) {
@@ -85,9 +82,9 @@ cv::Mat find_transform(
         if (score >= bestScore) {
             bestScore = score;
             auto* pBestTransform = bestTransform.data;
-            pX = x.data;
-            for (int i = 0; i < x.size().height * sizeof(float); i++, pBestTransform++, pX++)
-                *pBestTransform = *pX;
+            auto* pTransformMat = transformMat.data;
+            for (int i = 0; i < transformMat.size().height * transformMat.size().width * sizeof(float); i++, pBestTransform++, pTransformMat++)
+                *pBestTransform = *pTransformMat;
         }
     }
     

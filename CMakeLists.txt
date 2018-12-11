@@ -15,16 +15,16 @@ add_executable(panorama
 )
 target_link_libraries (panorama ${OpenCV_LIBS})
 
-add_executable(fast
-    fast.cpp
+add_executable(corner_detection
+    corner_detection.cpp
     src/arguments.cpp
     src/corner_detection.cpp
 )
-target_link_libraries (fast ${OpenCV_LIBS})
+target_link_libraries (corner_detection ${OpenCV_LIBS})
 
-add_executable(matching
-    matching.cpp
+add_executable(corner_pairing
+    corner_pairing.cpp
     src/arguments.cpp
     src/corner_detection.cpp
 )
-target_link_libraries (matching ${OpenCV_LIBS})
+target_link_libraries (corner_pairing ${OpenCV_LIBS})

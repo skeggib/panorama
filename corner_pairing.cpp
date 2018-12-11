@@ -25,15 +25,19 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    int threshold = 100;
+    int threshold = 50;
     const int cornerSize = 9;
     auto corners1 = find_corners<cornerSize>(image1, threshold);
     auto corners2 = find_corners<cornerSize>(image2, threshold);
 
     auto pairs = pair_corners(corners1, corners2);
 
-    auto size = image1.size();
-    size.width += image2.size().width;
+    cv::Size size
+    {
+        image1.size().width + image2.size().width,
+        std::max(image1.size().height, image2.size().height)
+    };
+
     cv::Mat result(size, image1.type());
 
     image1.copyTo(result(cv::Rect(0, 0, image1.size().width, image1.size().height)));

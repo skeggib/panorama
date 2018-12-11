@@ -9,7 +9,7 @@ School project - creating a panorama from multiple images.
 
 ## Building the project
 
-Generate the project :
+To generate the project:
 
 ```bash
 mkdir build
@@ -21,10 +21,20 @@ Then build the project with your compiler.
 
 ## Corner detection
 
-To run the corner detection algorithm on an image :
+To run the corner detection algorithm on an image:
 
 ```
-./fast <image>
+./corner_detection <image>
 ```
 
 It will open a window highlighting the detected corners and a second window with the corners detected by OpenCV.
+
+## Corner pairing
+
+To run the corner pairing algorithm on two images:
+
+```
+./corner_pairing <image1> <image2>
+```
+
+It will open a window showing the pairs of corners on the two images.
