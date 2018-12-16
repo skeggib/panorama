@@ -37,7 +37,7 @@ cv::Mat find_transform(
         for (int i = 0; i < indexes.size(); i++)
             selectedPairs.push_back(pairs[indexes[i]]);
 
-        cv::Mat A(9, 9, CV_32F);
+        cv::Mat A(8, 9, CV_32F);
         for (int i = 0; i < selectedPairs.size(); i++) {
             const auto& pair = selectedPairs[i];
             A.at<float>(i*2, 0) = (float)pair.first.x;
@@ -58,9 +58,6 @@ cv::Mat find_transform(
             A.at<float>(i*2+1, 7) = (float)-pair.second.y * pair.first.y;
             A.at<float>(i*2+1, 8) = (float)-pair.second.y;
         }
-        for (int i = 0; i < A.size().width; i++)
-            A.at<float>(8, i) = 0;
-        A.at<float>(8, 8) = 1;
 
         cv::SVD svd;
         cv::Mat w, u, vt;
@@ -68,15 +65,15 @@ cv::Mat find_transform(
         
         cv::Mat transformMat(3, 3, CV_32F);
         auto* pTransformMat = (float*)transformMat.data;
-        for (int i = 0; i < vt.size().height; i++, pTransformMat++)
-            *pTransformMat = vt.at<float>(8, i);
+        for (int i = 0; i < vt.cols; i++, pTransformMat++)
+            *pTransformMat = vt.at<float>(7, i);
 
         int score = 0;
         for (auto pair : pairs) {
             auto im = transform(pair.first, transformMat);
             double xd = im.x - pair.second.x;
             double yd = im.y - pair.second.y;
-            if (xd*xd + yd*yd < 10)
+            if (std::sqrt(xd*xd + yd*yd) < 1)
                 score++;
         }
         if (score >= bestScore) {

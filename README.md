@@ -38,3 +38,11 @@ To run the corner pairing algorithm on two images:
 ```
 
 It will open a window showing the pairs of corners on the two images.
+
+## Panorama reconstruction
+
+Tu construct a panorama with two images:
+
+```
+./panorama <image1> <image2> <out>
+```

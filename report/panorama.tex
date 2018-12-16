@@ -22,12 +22,12 @@
 \maketitle
 
 \begin{abstract}
-	As part of the image processing course in the fifth year of engineering school Polytech Paris-Sud, this project aims to reconstruct a panorama from several photographs by finding homographies between pairs of images. As the purpose of the project is to understand the construction of panoramas, we implemented all algorithms ourselves. However, we use the OpenCV library to open, save and display images. We divided the project into four parts: detecting corners using the FAST detector, pairing them, finding the homography and finally constructing the panorama by transforming the images.
+	As part of the image processing course in the fifth year of engineering school Polytech Paris-Sud, this project aims to reconstruct a panorama from several photographs by finding homographies between pairs of images. As the purpose of the project is to understand the construction of panoramas, we implemented all algorithms ourselves. However, we use the OpenCV library to open, save and display images, and to solve systems of linear equations. We divided the project into four parts: detecting corners using the FAST detector, pairing them, finding the homography and finally constructing the panorama by transforming the images.
 \end{abstract}
 
 \section{FAST detector}
 
-The first step of constructing a panorama is to find corners (i.e. interest points) in two overlapping images in a way that some of the corners corresponds to the same regions in both images. There are many methods of corner detection and we chose FAST (Features from Accelerated Segment Test) for its easy implementation. I implemented the naive version of the algorithm: for each pixel $p$ a circle of radius 3 is considered, if in this circle exists at least $n$ contiguous pixels which intensities are all higher or all lower than the intensity of $p$, it is labeled as a corner. I use a threshold $t$ such as for a pixel $x_i$ in the circle, if $I(p) - t \le I(x_i) \le I(p) + t$ then $x_i$ and $p$ have the same intensity. By formalizing, a pixel $p$ is a corner if one of this two conditions is met:
+The first step of constructing a panorama is to find corners (i.e. interest points) in two overlapping images in a way that some of the corners corresponds to the same regions in both images. There are many methods of corner detection and we chose FAST (Features from Accelerated Segment Test) for its easy implementation. I implemented the naive version of the algorithm: for each pixel $p$, a circle of radius 3 is considered. If in this circle exists at least $n$ contiguous pixels which intensities are all higher or all lower than the intensity of $p$, it is labelled as a corner. I use a threshold $t$ such as for a pixel $x_i$ in the circle, if $I(p) - t \le I(x_i) \le I(p) + t$ then $x_i$ and $p$ have the same intensity. By formalizing, a pixel $p$ is a corner if one of these two conditions is met:
 
 \begin{align*}
 \exists S | \forall x \in S, I(x) \le I(p) - t\\
@@ -37,7 +37,7 @@ The first step of constructing a panorama is to find corners (i.e. interest poin
 where $S$ is a set of $n$ contiguous pixels in the circle.
 \\
 
-I tested my implementation by comparing my results to the FAST detector implemented in OpenCV using the parameters $n = 12$ and $t = 50$ (see figures \ref{my_fast} and \ref{opencv_fast}). We can see in those two images that the same corners are detected but my implementation detects less of them: this is probably due to a different method of non-maxima suppression. Another interesting comparison can be the execution time: for this image, OpenCV found corners in less than 5 ms and my implementation took about 500 ms. The execution time of my algorithm is longer because I implemented the naive version, which could be improved by examining 4 example pixels and rejecting non-corners before searching the contiguous pixels.
+I tested my implementation by comparing my results to the FAST detector implemented in OpenCV using the parameters $n = 12$ and $t = 50$ (see figures \ref{my_fast} and \ref{opencv_fast}). We can see in those two images that the same corners are detected but my implementation detects less of them: this is probably due to a different method of non-maxima suppression. Another interesting comparison can be the execution time: for this image, OpenCV found corners in less than 5 ms and my implementation took about 500 ms. The execution time of my algorithm is longer because I implemented the naive version, which I could improve by examining four example pixels and rejecting non-corners before searching the contiguous pixels.
 
 \begin{figure}[h]
 	\centering\includegraphics[width=0.5\textwidth]{images/my_fast.png}
@@ -53,10 +53,10 @@ I tested my implementation by comparing my results to the FAST detector implemen
 
 \section{Pairing corners}
 
-The second step of contructing a panorama is to find common structures in two overlapping images. To do that, we find corners in both images and search for pairs of corners that are similar (that comes from the same region in the two images). In this project I use my implementation of the FAST detector decribed in the previous section to find the corners.
+The second step of constructing a panorama is to find common structures in two overlapping images. To do that, we find corners in both images and search for pairs of corners that are similar (that comes from the same region in the two images). In this project, I use my implementation of the FAST detector described in the previous section to find the corners.
 \\
 
-For each image, I create a list of $9 \times 9$ squares centered on the corners, the pixels in these squares are my features. To pair them, for each corner in the first image, I compute the sum of squared distances (SSD) with corners of the second image and then keep the pair that have the lower distance. For two corners $c_1$ and $c_2$, the SSD is defined as follows:
+For each image, I create a list of $9 \times 9$ squares centred on the corners, the pixels in these squares are my features. To pair them, for each corner in the first image, I compute the sum of squared distances (SSD) with corners of the second image and then keep the pair that have the lower distance. For two corners $c_1$ and $c_2$, the SSD is defined as follows:
 
 $$
 SSD(c_1, c_2) = \sum_{x = 1}^{9} \sum_{y = 1}^{9} \left[c_1(x, y) - c_2(x, y)\right]^2
@@ -65,7 +65,7 @@ $$
 where $c(x,y)$ is the intensity of the pixel $(x,y)$ in the square around the corner $c$.
 \\
 
-To make this method more robust to global variations of intensity (e.g. photographs with different expositions), I replaced the SSD by a zero-mean sum of squared distances (ZMSSD) where the mean of a corner is substracted from it before computing the distance :
+To make this method more robust to global variations of intensity (e.g. photographs with different expositions), I replaced the SSD by a zero-mean sum of squared distances (ZMSSD) where the mean of a corner is subtracted from it before computing the distance:
 
 $$
 SSD(c_1, c_2) = \sum_{x = 1}^{9} \sum_{y = 1}^{9} \left[(c_1(x, y) - \bar{c_1}) - (c_2(x, y) - \bar{c_2})\right]^2
@@ -80,10 +80,10 @@ $$
 SSD(c_1, c_{2-best}) \le \frac{SSD(c_1, c_{2-second})}{2}
 $$
 
-I finally optimized the result of this algorithm by using the married pairing strategy: I run the algorithm twice, first pairing corners from image 1 to image 2, then from image 2 to image 1. I finnaly keep only pairs of corners that were paired reciprocally.
+I finally optimized the result of this algorithm by using the married pairing strategy: I run the algorithm twice, first pairing corners from image 1 to image 2, then from image 2 to image 1. I finally keep only pairs of corners that were paired reciprocally.
 \\
 
-Figures \ref{pairs_zmssd}, \ref{pairs_zmssd_highscore}, \ref{pairs_zmssd_highscore_reciprocity} are the results of the corner pairing algorithm using the optimizations described above. For this example I ran the FAST detector with a high threshold to detect less corners, making the figures more readable.
+Figures \ref{pairs_zmssd}, \ref{pairs_zmssd_highscore}, \ref{pairs_zmssd_highscore_reciprocity} are the results of the corner pairing algorithm using the optimizations described above. For this example, I ran the FAST detector with a high threshold to detect less corners, making the figures more readable.
 
 \begin{figure*}[h!]
 \vspace{1cm}
@@ -103,6 +103,86 @@ Figures \ref{pairs_zmssd}, \ref{pairs_zmssd_highscore}, \ref{pairs_zmssd_highsco
 \caption{Result of the pairing algorithm using the ZMSSD distance, keeping only high scores and applying the married pairing strategy.}
 \label{pairs_zmssd_highscore_reciprocity}
 \vspace{1cm}
+\end{figure*}
+
+\section{Finding the homography}
+
+To transform an image in a way that it matches another overlapping image, we have to find the homography of the two images. It is a $3 \times 3$ matrix H such as, taking a pixel $x$ in the first image and a pixel $x'$ of the same region in the second image:
+
+$$
+\begin{bmatrix}
+w x'_x \\
+w x'_y \\
+w
+\end{bmatrix}
+=
+\begin{bmatrix}
+H_{11} & H_{12} & H_{13} \\
+H_{21} & H_{22} & H_{23} \\
+H_{31} & H_{32} & H_{33} \\
+\end{bmatrix}
+\begin{bmatrix}
+x_x \\
+x_y \\
+1
+\end{bmatrix}
+$$
+
+To find the matrix H, I choose four pairs of corners $[(x_n, y_n), (x'_n, y'_n)]$ and construct a system of linear equations $Ah = 0$ as follows:
+
+$$
+\begin{bmatrix}
+x_1 & y_1 & 1 & 0 & 0 & 0 & -x'_1 x_1 & -x'_1 y_1 & -x'_1 \\
+0 & 0 & 0 & x_1 & y_1 & 1 & -y'_1 x_1 & -y'_1 y_1 & -y'_1 \\
+\vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \vdots \\
+x_4 & y_4 & 1 & 0 & 0 & 0 & -x'_4 x_4 & -x'_4 y_4 & -x'_4 \\
+0 & 0 & 0 & x_4 & y_4 & 1 & -y'_4 x_4 & -y'_4 y_4 & -y'_4 \\
+\end{bmatrix}
+\begin{bmatrix}
+h_{11} \\
+h_{12} \\
+h_{13} \\
+h_{21} \\
+h_{22} \\
+h_{23} \\
+h_{31} \\
+h_{32} \\
+h_{33}
+\end{bmatrix}
+= 0
+$$
+
+Then find $h$ by taking the last column of the matrix $V$ of the decomposition $A = U \Sigma V^T$.
+\\
+
+As some of the pairs could be incorrect, I use the RANSAC (RANdom SAmple Consensus) to compute the matrix $H$ which best transforms the image. To do that, I choose four random pairs, solve the system $Ah = 0$ and test the matrix $H$ on the rest of the pairs [x, x'] by counting the number of pairs where the condition $|Hx - x'| < 1$ is met. I do that one-thousand times and keep the homography that have the best score.
+\\
+
+An improvement to this method would have been a more precise computation of $H$ by creating a matrix A with all the pairs that satisfy the condition $|Hx - x'| < 1$, but I did not have the time to do the implementation.
+
+\section{Panorama reconstruction}
+
+The final part of this project is to actually reconstruct the panorama using the computed homography in the preceding section. First, I compute the transformation of the (physical) corners of the first image to create a result matrix large enough to contain the transformed image. Then I copy the second image into the result matrix. Finally, I loop through the pixels of the result matrix, and for each pixel $x_{result}$, I compute the corresponding pixel $x_{image}$ in the first image:
+
+$$
+x_{image} = H^{-1}x_{result}
+$$
+
+If the pixel $x_{image}$ exists in the first image I copy its color to the pixel $x_{result}$. An improvement to this part of the project would be a bilinear interpolation of the transformed image.
+\\
+
+Figure \ref{panorama_1-2} is a panorama reconstruction using only two images. Figure \ref{panorama} is a panorama I created using four images.
+
+\begin{figure*}
+	\centering\includegraphics[width=\textwidth]{images/panorama_1-2.png}
+	\caption{Panorama using two images.}
+	\label{panorama_1-2}
+\end{figure*}
+
+\begin{figure*}
+	\centering\includegraphics[width=\textwidth]{images/panorama.png}
+	\caption{Panorama using four images.}
+	\label{panorama}
 \end{figure*}
 
 \end{document}
